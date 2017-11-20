@@ -12,10 +12,6 @@ These instructions will get you a copy of the project up and running on your loc
 - python 3.6
 
 
-```
-Give examples
-```
-
 ### Installing
 
 - fulfill prerequisites
@@ -30,10 +26,10 @@ run "nosetests" from the root directory of this directory
 
 ## Contributing
 
-Huy Cao Tri Do
-Samuel Andermatt
-Quentin Azupedys
-Simon Huber
+- Huy Cao Tri Do
+- Samuel Andermatt
+- Quentin Azupedys
+- Simon Huber
 
 
 ## License
