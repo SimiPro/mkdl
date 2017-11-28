@@ -12,3 +12,7 @@ mkdl/m_kart_64.z64
 
 #intellij files
 .idea
+
+#data files
+mkdl/recordings
+mkdl/weights
