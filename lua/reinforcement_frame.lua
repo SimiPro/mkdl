@@ -125,6 +125,7 @@ while util.readProgress() < 3 do -- 3 means 3 laps
   if message == "RESET" then
     console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
     savestate.loadslot(2)
+    client.unpause()
   elseif message ~= "PREDICTIONERROR" then
     current_action = tonumber(message)
     for i=1, WAIT_FRAMES do
