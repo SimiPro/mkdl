@@ -1,7 +1,8 @@
-import sys, time, logging, os, argparse
+import logging
+import os
 import numpy as np
-from PIL import Image, ImageGrab
-from train import create_model, is_valid_track_code, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS
+from PIL import ImageGrab, Image
+from train import create_model, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS
 import reinforcement
 
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +18,10 @@ def prepare_image(im):
 
 
 class OldAgent(object):
-    """ ported old supervised agent to the reinforcement model"""
+    """
+    This class implements the reference agent
+    ported old supervised agent to the reinforcement model
+    """
     def __init__(self):
         self.model = create_model(keep_prob=1)
         if os.path.isfile('weights/all.hdf5'):
@@ -28,11 +32,14 @@ class OldAgent(object):
         action = None
         if screenshot_path == 'clip':
             im = ImageGrab.grabclipboard()
-            if im is not None:
-                action = self.model.predict(prepare_image(im), batch_size=1)[0]
-                action = action[0]
-            else:
-                logger.error('If you want image from clipboard, provide image in clipboard')
+        else:
+            im = Image.open(screenshot_path)
+        if im is not None:
+            action = self.model.predict(prepare_image(im), batch_size=1)[0]
+            action = action[0]
+        else:
+            logger.error('If you want image from clipboard, provide image in clipboard')
+
         if action is None:
             logger.error('could not predict next action set action=0 | screenshot path: {}'.format(screenshot_path))
             return 0

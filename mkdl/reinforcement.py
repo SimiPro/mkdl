@@ -1,12 +1,16 @@
 import gym
 import socket
 import logging
-import numpy as np
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class MarioEnv(gym.Env):
+    """
+    Mario Environment. Use this to communicate with the Mario kart client
+    """
     def __init__(self):
         self.in_game = False
         # Set these in ALL subclasses
@@ -43,6 +47,10 @@ class MarioEnv(gym.Env):
 
 
 class MarioConnection:
+    """
+    Responsible for the socket communication between the python server
+    and the lua socket of the client
+    """
     def __init__(self, port=36296):
         self.port = port
         self.client_socket = None
@@ -89,6 +97,10 @@ class MarioConnection:
             return None
 
 
+"""
+this main program just runs 50 steps forward then it resets
+and then it drives right for 50 steps
+"""
 if __name__ == "__main__":
     mario = MarioEnv()
     (screen_shot, reward, done) = mario.reset()
