@@ -92,12 +92,12 @@ class MarioConnection:
 
 if __name__ == "__main__":
     mario = MarioEnv()
-    mario.reset()
+    (screen_shot, reward, done) = mario.reset()
 
     for i in range(50):
-        mario.step(0)
+        (screen_shot, reward, done) = mario.step(0)
 
-    mario.reset()
+    (screen_shot, reward, done) = mario.reset()
 
     for i in range(50):
-        mario.step(0)
+        (screen_shot, reward, done) = mario.step(1)
