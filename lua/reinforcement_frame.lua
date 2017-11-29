@@ -12,7 +12,7 @@ USE_CLIPBOARD = true -- Use the clipboard to send screenshots to the predict ser
 
 --[[ How many frames to wait before sending a new prediction request. If you're using a file, you
 may want to consider adding some frames here. ]]--
-WAIT_FRAMES = 10
+WAIT_FRAMES = 5
 
 USE_MAPPING = true -- Whether or not to use input remapping.
 CHECK_PROGRESS_EVERY = 300 -- Check progress after this many frames to detect if we get stuck.
@@ -43,7 +43,7 @@ local reward = util.readProgress()
 
 --- inform mario environment that we're ready
 -- tcp:send("STARTED\n")
-tcp:settimeout(0)
+tcp:settimeout(3)
 
 outgoing_message, outgoing_message_index = nil, nil
 function request_prediction()
@@ -140,8 +140,7 @@ while util.readProgress() < 3 do -- 3 means 3 laps
 
   -- inform serer about current state and request action
   request_prediction()
-
-
+  
   joypad.set({["P1 A"] = true})
   joypad.setanalog({["P1 X Axis"] = util.convertSteerToJoystick(current_action) })
   draw_info()

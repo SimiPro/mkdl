@@ -1,11 +1,10 @@
 import gym
 import socket
 import logging
-
+import numpy as np
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 class MarioEnv(gym.Env):
     def __init__(self):
@@ -78,7 +77,7 @@ class MarioConnection:
             reward = parsed[3]
             done = parsed[5]
 
-            if done == "False":
+            if done.startswith("False"):
                 done = False
             else:
                 done = True
