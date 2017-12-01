@@ -1,20 +1,13 @@
 import logging
 import os
-import numpy as np
+
 from PIL import ImageGrab, Image
 from train import create_model, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS
 import reinforcement
+import utils
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def prepare_image(im):
-    im = im.resize((INPUT_WIDTH, INPUT_HEIGHT))
-    im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
-    im_arr = im_arr.reshape((INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNELS))
-    im_arr = np.expand_dims(im_arr, axis=0)
-    return im_arr
 
 
 class OldAgent(object):
@@ -30,12 +23,10 @@ class OldAgent(object):
 
     def act(self, screenshot_path, reward, done):
         action = None
-        if screenshot_path == 'clip':
-            im = ImageGrab.grabclipboard()
-        else:
-            im = Image.open(screenshot_path)
+        im = utils.get_screenshot(screenshot_path)
         if im is not None:
-            action = self.model.predict(prepare_image(im), batch_size=1)[0]
+            prepared_image = utils.prepare_image(im, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS)
+            action = self.model.predict(prepared_image, batch_size=1)[0]
             action = action[0]
         else:
             logger.error('If you want image from clipboard, provide image in clipboard')
