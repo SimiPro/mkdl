@@ -28,7 +28,7 @@ run "nosetests" from the root directory of this directory
 
 - Huy Cao Tri Do
 - Samuel Andermatt
-- Quentin Azupedys
+- Quentin Auzepy
 - Simon Huber
 
 
