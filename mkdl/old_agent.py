@@ -1,8 +1,6 @@
 import logging
 import os
-
-from PIL import ImageGrab, Image
-from train import create_model, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS
+from train import create_model
 import reinforcement
 import utils
 
@@ -25,7 +23,7 @@ class OldAgent(object):
         action = None
         im = utils.get_screenshot(screenshot_path)
         if im is not None:
-            prepared_image = utils.prepare_image(im, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS)
+            prepared_image = utils.prepare_image(im)
             action = self.model.predict(prepared_image, batch_size=1)[0]
             action = action[0]
         else:
