@@ -7,33 +7,33 @@ import logging
 import numpy as np
 import time
 
+from PIL import ImageGrab, Image
+from gym import spaces
+
 from start_bizhawk import start_mario
 from utils import Singleton
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+INPUT_WIDTH = 200
+INPUT_HEIGHT = 66
+INPUT_CHANNELS = 3
+
 
 class MarioEnv(gym.Env):
     """
     Mario Environment. Use this to communicate with the Mario kart client
     """
-    def __init__(self, num_steering_dir=0):
-        self.in_game = False
+    def __init__(self,  num_steering_dir=0, num_env=-1):
+        """if you have multiple threads input marioserverholder"""
         # Set these in ALL subclasses
-        self.action_space = None  # spaces.Box(low=0, high=1)
-        self.observation_space = None
-        self.mario_connection = MarioConnection()
+        self.mario_server = MarioServer(num_env=num_env)
+        self.mario_server.start()
+        self.action_space = spaces.Discrete(num_steering_dir)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNELS))
+        self.mario_connection = MarioConnection(self.mario_server, num_env=num_env)
         self.num_steering_dir = num_steering_dir
-
-    def game_started(self):
-        print("MARIO Environment is started!")
-        self.in_game = True
-
-    def action_response(self, screenshot_path, reward, done):
-        self.screenshot_path = screenshot_path
-        self.reward = reward
-        self.done = done
 
     # we send here an action to execute to the mario game
     # we expect a (new screenshot_path, reward, done) response
@@ -44,11 +44,19 @@ class MarioEnv(gym.Env):
 
         logger.debug('executing action: {}'.format(action))
         (screen_shot, reward, done) = self.mario_connection.send_action(action)
-        return (screen_shot, reward, done)
+
+        im = self.get_screenshot(screen_shot)
+        im = self.prepare_image(im)
+
+        return im, reward, done, {}
 
     def _reset(self):
-        (screen_shot, reward, done) = self.mario_connection.reset_client()
-        return (screen_shot, reward, done)
+        (screen_shot_path, reward, done) = self.mario_connection.reset_client()
+
+        im = self.get_screenshot(screen_shot_path)
+        im = self.prepare_image(im)
+
+        return im
 
     def _render(self, mode='human', close=False):
         # we always render human at the moment
@@ -57,22 +65,53 @@ class MarioEnv(gym.Env):
     def _seed(self, seed=None):
         return []
 
+    def prepare_image(self, im):
+        return self.prepare_image_(im, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS)
 
-@Singleton
+    def prepare_image_(self, im, conv_input_width, conv_input_height, conv_input_channels):
+        im = im.resize((conv_input_width, conv_input_height))
+        im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
+        im_arr = im_arr.reshape((conv_input_height, conv_input_width, conv_input_channels))
+        #im_arr = np.expand_dims(im_arr, axis=0)
+        return im_arr
+
+    def get_screenshot(self, screenshot_path):
+        im = None
+        i = 0
+        while im is None and i < 5:
+            i = i + 1
+            if screenshot_path == 'clip':
+                im = ImageGrab.grabclipboard()
+            else:
+                im = Image.open(screenshot_path)
+
+        if im is not None:
+            self.old_image = im
+            return im
+        print('had to take old image!! failed to take screenshot!')
+        return self.old_image
+
+
 class MarioServer(threading.Thread):
-    def __init__(self):
+    def __init__(self, port=36295, num_env=-1):
         super().__init__()
-        self.port = 36296
+        #print("port: {} | num_env: {}".format(port, num_env))
+        if num_env is not (-1):
+            self.port = port + num_env
+        else:
+            self.port = port
+        print("port: {} | num_env: {}".format(self.port, num_env))
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('localhost', self.port))
+        name = 'localhost'
+        self.server_socket.bind((name, self.port))
         self.connections = 0
         self.connection_queue = queue.Queue()
-        print('mario server runs - connect to it')
+        print('mario server | ip: {} | port: {} - connect to it'.format(name, self.port))
 
     def run(self):
         logger.info('starting tcp - socket on port: {}'.format(self.port))
-        self.server_socket.listen(5)  # wait for 5 connections
-        while self.connections < 5:
+        self.server_socket.listen(1)  # wait for 5 connections
+        while self.connections < 1:
             logger.info('Waiting for some more connection')
             conn = self.server_socket.accept()
             self.connection_queue.put(conn)
@@ -90,18 +129,14 @@ class MarioServer(threading.Thread):
         return client_socket, client_address
 
 
-server = MarioServer.Instance()
-server.start()
-
-
 class MarioConnection:
     """
     Responsible for the socket communication between the python server
     and the lua socket of the client
     """
-    def __init__(self):
-        start_mario()  # start mario then get connection. server should be up and running already
-        (self.client_socket, self.client_address) = MarioServer.Instance().get_connection_blocking()
+    def __init__(self, server, num_env=-1):
+        start_mario(num_env=num_env)  # start mario then get connection. server should be up and running already
+        (self.client_socket, self.client_address) = server.get_connection_blocking()
 
     def reset_client(self):
         self.client_socket.send(b'RESET\n')

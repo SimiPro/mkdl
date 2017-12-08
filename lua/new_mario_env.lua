@@ -5,7 +5,7 @@ local Encoder = luanet.import_type "System.Text.Encoding"
 local TcpClient = luanet.import_type("System.Net.Sockets.TcpClient")
 local IO = luanet.import_type "System.IO.Path"
 
-mySocket = TcpClient("localhost", 36296)
+mySocket = TcpClient("localhost", 36295)
 stream = mySocket:GetStream()
 sMessage = "myMessage"
 rMessage = "receivedData"
@@ -47,7 +47,7 @@ end
 USE_CLIPBOARD = true -- Use the clipboard to send screenshots to the predict server.
 --[[ How many frames to wait before sending a new prediction request. If you're using a file, you
 may want to consider adding some frames here. ]]--
-WAIT_FRAMES = 1
+WAIT_FRAMES = 5
 USE_MAPPING = true -- Whether or not to use input remapping.
 savestate.loadslot(2)
 savestate.saveslot(2) -- save current slot for reset purposes
@@ -58,16 +58,26 @@ local SCREENSHOT_FILE = getTMPDir() .. 'predict-screenshot2.png' -- where to sav
 local new_progress = util.readProgress()
 local old_progress = 0
 local reward = 0
+local done = "False"
+local predictions = 0
 
 function request_prediction()
+  predictions = predictions + 1
   new_progress = util.readProgress()
   reward = new_progress - old_progress
+  old_progress = new_progress
+  reward = reward * 100
+  if reward == 0 then
+    reward = -1
+  end
+
+  --console.log(reward)
   if USE_CLIPBOARD then
     client.screenshottoclipboard()
-    sMessage = "MESSAGE screenshot_clip_reward_" .. reward .. "_done_False \n"
+    sMessage = "MESSAGE screenshot_clip_reward_" .. reward .. "_done_" .. done .. "\n"
   else
     client.screenshot(SCREENSHOT_FILE)
-    sMessage = "MESSAGE screenshot_" .. SCREENSHOT_FILE .. "_reward_" .. reward .. "_done_False \n"
+    sMessage = "MESSAGE screenshot_" .. SCREENSHOT_FILE .. "_reward_" .. reward .. "_done_" .. done .. "\n"
     --outgoing_message = "PREDICT:" .. SCREENSHOT_FILE .. "\n"
   end
 end
@@ -81,6 +91,10 @@ while util.readProgress() < 3 do -- 3 means 3 laps
   rMessage = recvData()
 
   if string.find(rMessage, "RESET") ~= nil then
+    screenshot_property = string.match(rMessage, "%d+")
+    if screenshot_property == 0 or screenshot_property == nil then
+      USE_CLIPBOARD = true
+    end
     console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
     savestate.loadslot(2)
     client.unpause()
@@ -96,6 +110,13 @@ while util.readProgress() < 3 do -- 3 means 3 laps
     end
   else
     print("Prediction error...")
+  end
+
+  if util.readProgress() > 2.8 or predictions > 2500 then
+    console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
+    savestate.loadslot(2)
+    client.unpause()
+    predictions = 0
   end
 
 end

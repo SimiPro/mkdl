@@ -3,6 +3,7 @@ import os
 from train import create_model
 import reinforcement
 import utils
+import msvcrt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,6 +14,7 @@ class OldAgent(object):
     This class implements the reference agent
     ported old supervised agent to the reinforcement model
     """
+
     def __init__(self):
         self.model = create_model(keep_prob=1)
         if os.path.isfile('weights/all.hdf5'):
@@ -36,11 +38,18 @@ class OldAgent(object):
 
 
 if __name__ == '__main__':
+
     mario_env = reinforcement.MarioEnv()
     agent = OldAgent()
 
     (screenshot_path, reward, done) = mario_env.reset()
-
+    i = 0
     while not done:
-        action = agent.act(screenshot_path, reward, done)
-        (screenshot_path, reward, done) = mario_env.step(action)
+        i = i + 1
+
+        if i == 100 or (msvcrt.kbhit() and ord(msvcrt.getch()) == 27):
+            (screenshot_path, reward, done) = mario_env.reset()
+            i = 0
+        else:
+            action = agent.act(screenshot_path, reward, done)
+            (screenshot_path, reward, done) = mario_env.step(action)

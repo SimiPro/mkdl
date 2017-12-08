@@ -7,7 +7,7 @@ ENV_VAR_BIZ = 'BIZHAWK'
 ENV_VAR_MKDL_LUA = 'MKDL_LUA'
 
 
-def start_mario():
+def start_mario(num_env=-1):
     bizhawk_path = os.environ.get(ENV_VAR_BIZ)
     if bizhawk_path is None:
         print("no bizhawk path found in environment variable: {}".format(ENV_VAR_BIZ))
@@ -27,7 +27,10 @@ def start_mario():
     if not mkdl_lua_path.endswith("\\"):
         mkdl_lua_path = mkdl_lua_path + "\\"
 
-    lua_file_path = '{}new_mario_env.lua'.format(mkdl_lua_path)
+    if num_env is -1:
+        lua_file_path = '{}new_mario_env.lua'.format(mkdl_lua_path)
+    else:
+        lua_file_path = '{}new_mario_env{}.lua'.format(mkdl_lua_path, num_env)
 
     if not os.path.isdir(bizhawk_path + "isos"):
         print("please create {}isos directory and put in \
