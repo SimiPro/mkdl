@@ -60,17 +60,26 @@ local old_progress = 0
 local reward = 0
 local done = "False"
 local predictions = 0
+local totalReward = 0
 
 function request_prediction()
   predictions = predictions + 1
   new_progress = util.readProgress()
   reward = new_progress - old_progress
   old_progress = new_progress
-  reward = reward * 100
-  if reward == 0 then
-    reward = -1
+  if reward > 0 then
+    reward = reward
+  else
+    reward = -.1
   end
-
+  totalReward = totalReward + reward
+  if (-totalReward) > 100 then
+    done = "True"
+    totalReward = 0
+  else
+    done = "False"
+  end
+  --console.log(totalReward)
   --console.log(reward)
   if USE_CLIPBOARD then
     client.screenshottoclipboard()
@@ -108,7 +117,7 @@ while util.readProgress() < 3 do -- 3 means 3 laps
     print("Prediction error...")
   end
 
-  if util.readProgress() > 2.8 or predictions > 2500 then
+  if util.readProgress() > 2.9 or predictions > 2500 then
     console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
     savestate.loadslot(2)
     client.unpause()

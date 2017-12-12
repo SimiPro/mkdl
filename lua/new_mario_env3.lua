@@ -60,16 +60,25 @@ local old_progress = 0
 local reward = 0
 local done = "False"
 local predictions = 0
-
+local totalReward = 0
 function request_prediction()
   predictions = predictions + 1
   new_progress = util.readProgress()
   reward = new_progress - old_progress
   old_progress = new_progress
-  reward = reward * 100
-  if reward == 0 then
-    reward = -1
+  if reward > 0 then
+    reward = reward
+  else
+    reward = -.1
   end
+    totalReward = totalReward + reward
+  if (-totalReward) > 100 then
+    done = "True"
+    totalReward = 0
+  else
+    done = "False"
+  end
+  -- console.log(totalReward)
 
   --console.log(reward)
   if USE_CLIPBOARD then
