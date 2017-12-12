@@ -30,10 +30,13 @@ class MarioEnv(gym.Env):
         # Set these in ALL subclasses
         self.mario_server = MarioServer(num_env=num_env)
         self.mario_server.start()
+        # possible steering dir, A, jump j/n
+        #self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
         self.action_space = spaces.Discrete(num_steering_dir)
         self.observation_space = spaces.Box(low=0, high=255, shape=(INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNELS))
         self.mario_connection = MarioConnection(self.mario_server, num_env=num_env)
         self.num_steering_dir = num_steering_dir
+
 
     # we send here an action to execute to the mario game
     # we expect a (new screenshot_path, reward, done) response
@@ -157,7 +160,7 @@ class MarioConnection:
             #  logger.info("splitted message: {}".format(parsed))
 
             screenshot_path = parsed[1]
-            reward = parsed[3]
+            reward = float(parsed[3])
             done = parsed[5]
 
             if done.startswith("False"):
