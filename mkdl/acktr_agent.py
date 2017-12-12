@@ -7,7 +7,7 @@ from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from baselines.acktr.policies import CnnPolicy
 
-from reinforcement import MarioEnv
+from mario_env import MarioEnv
 
 
 
