@@ -7,7 +7,7 @@ from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from baselines.a2c.policies import CnnPolicy, LstmPolicy, LnLstmPolicy
 
-from reinforcement import MarioEnv
+from mario_env import MarioEnv
 
 
 def train(num_timesteps, seed, policy, lrschedule, num_cpu):
