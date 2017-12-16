@@ -31,8 +31,11 @@ class MarioEnv(gym.Env):
         self.mario_server = MarioServer(num_env=num_env)
         self.mario_server.start()
         # possible steering dir, A, jump j/n
-        #self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(1,))
-        self.action_space = spaces.Discrete(num_steering_dir)
+        if num_steering_dir > 0:
+            self.action_space = spaces.Discrete(num_steering_dir)
+        else:
+            self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,))
+
         self.observation_space = spaces.Box(low=0, high=255, shape=(INPUT_HEIGHT, INPUT_WIDTH, INPUT_CHANNELS))
         self.mario_connection = MarioConnection(self.mario_server, num_env=num_env)
         self.num_steering_dir = num_steering_dir
@@ -44,8 +47,12 @@ class MarioEnv(gym.Env):
         if self.num_steering_dir > 0:  # we use action encoding
             action_space = np.linspace(-1, 1, self.num_steering_dir)
             action = action_space[action]
+        else:
+            action = np.clip(action, -0.99, 0.99)
+            action = np.array([float('{:.2f}'.format(i)) for i in action])
+            logger.debug('executing action: {}'.format(action))
 
-        logger.debug('executing action: {}'.format(action))
+
         (screen_shot, reward, done) = self.mario_connection.send_action(action)
 
         im = self.get_screenshot(screen_shot)
