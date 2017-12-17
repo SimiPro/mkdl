@@ -8,6 +8,7 @@ local TcpClient = luanet.import_type("System.Net.Sockets.TcpClient")
 local IO = luanet.import_type "System.IO.Path"
 server.USE_CLIPBOARD = true
 server.SCREENSHOT_FILE = ""
+server.start_time = os.clock()
 
 function server.init(port, use_clipboard, file_name)
   server.mySocket = TcpClient("localhost", port)
@@ -67,21 +68,19 @@ local new_progress = util.readProgress()
 local old_progress = 0
 local reward = 0
 local done = "False"
-local predictions = 0
 local totalReward = 0
 
 function server.request_prediction()
-  predictions = predictions + 1
   new_progress = util.readProgress()
   reward = new_progress - old_progress
-  old_progress = new_progress
   if reward > 0 then
-    reward = reward
+    reward = 15^new_progress - 15^old_progress
   else
-    reward = -.1
+   -- reward = -.1
   end
+  gui.addmessage("reward: " .. reward)
   totalReward = totalReward + reward
-  if (-totalReward) > 100 then
+  if os.clock() - server.start_time > 180 then -- we reset after 180 seconds
     done = "True"
     totalReward = 0
   else
@@ -98,6 +97,7 @@ function server.request_prediction()
     server.sMessage = "MESSAGE screenshot_" .. server.SCREENSHOT_FILE .. "_reward_" .. reward .. "_done_" .. done .. "\n"
     --outgoing_message = "PREDICT:" .. SCREENSHOT_FILE .. "\n"
   end
+  old_progress = new_progress
 end
 
 function server.start()
@@ -109,6 +109,7 @@ function server.start()
       server.rMessage = server.recvData()
 
       if string.find(server.rMessage, "RESET") ~= nil then
+        server.start_time = os.clock()
         console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
         savestate.loadslot(2)
         client.unpause()
@@ -144,8 +145,8 @@ function server.start()
         print("Prediction error...")
       end
 
-      if util.readProgress() > 3.0 then
-        console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
+      if util.readProgress() > 2.97 then
+        console.log('finished a game lets reset. runtime: ' .. (os.clock() - server.run_time))
         savestate.loadslot(2)
         client.unpause()
       end
