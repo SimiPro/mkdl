@@ -77,9 +77,9 @@ function server.get_reward3()
   if velocity < .1 then
     velocity = 0
   end
-
+  --gui.addmessage("old: " .. server.old_progress .. " | new: "  .. server.new_progress)
   if server.old_progress > server.new_progress then
-    velocity = (velocity)*(-.1)
+    return (-1)*util.round(velocity, 1)
   end
   return util.round(velocity, 1)
 end
