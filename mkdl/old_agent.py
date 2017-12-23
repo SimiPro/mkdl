@@ -1,7 +1,7 @@
 import logging
 import os
 from train import create_model
-import reinforcement
+import mario_env
 import utils
 import msvcrt
 
@@ -39,7 +39,7 @@ class OldAgent(object):
 
 if __name__ == '__main__':
 
-    mario_env = reinforcement.MarioEnv()
+    mario_env = mario_env.MarioEnv()
     agent = OldAgent()
 
     (screenshot_path, reward, done) = mario_env.reset()
