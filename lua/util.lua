@@ -9,6 +9,11 @@ function util.getWorkingDir()
   return io.popen("cd"):read("*l")
 end
 
+function util.round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return math.floor(num * mult + 0.5) / mult
+end
+
 -- Return the location of the TMP dir on this computer, caching the result.
 local TMP_DIR = nil
 function util.getTMPDir()
