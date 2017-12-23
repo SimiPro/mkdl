@@ -11,7 +11,7 @@ from keras.models import *
 from keras.layers import *
 from keras import layers, models
 from keras import backend as K
-from reinforcement import MarioEnv
+from mario_env import MarioEnv
 
 THREAD_DELAY = .1
 N_STEP_RETURN = 8  # learn after 5 examples (cus then we know the future)
