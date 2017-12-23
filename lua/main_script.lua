@@ -74,11 +74,14 @@ local totalReward = 0
 function server.get_reward3()
   local velocity = util.readVelocity()
   velocity = velocity / 10
+  if velocity < .1 then
+    velocity = 0
+  end
 
   if server.old_progress > server.new_progress then
     velocity = (velocity)*(-.1)
   end
-  return util.round(velocity, 3)
+  return util.round(velocity, 1)
 end
 
 --- this function gives negativ reward if we slow down

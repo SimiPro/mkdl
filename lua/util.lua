@@ -1,10 +1,5 @@
 local util = {}
 
-local uuid = require("lualibs.uuid"); uuid.seed()
-function util.generateUUID()
-  return uuid()
-end
-
 function util.getWorkingDir()
   return io.popen("cd"):read("*l")
 end
