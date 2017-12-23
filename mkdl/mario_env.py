@@ -18,7 +18,13 @@ logger = logging.getLogger(__name__)
 
 INPUT_WIDTH = 200
 INPUT_HEIGHT = 66
-INPUT_CHANNELS = 3
+
+USE_GREY_SCALE = False
+
+if USE_GREY_SCALE:
+    INPUT_CHANNELS = 1
+else:
+    INPUT_CHANNELS = 3
 
 
 class MarioEnv(gym.Env):
@@ -79,8 +85,11 @@ class MarioEnv(gym.Env):
         return self.prepare_image_(im, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS)
 
     def prepare_image_(self, im, conv_input_width, conv_input_height, conv_input_channels):
+        if USE_GREY_SCALE:
+            im = im.convert('L')
         im = im.resize((conv_input_width, conv_input_height))
-        im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
+        im_arr = np.asarray(im)
+        #im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
         im_arr = im_arr.reshape((conv_input_height, conv_input_width, conv_input_channels))
         #im_arr = np.expand_dims(im_arr, axis=0)
         return im_arr
@@ -106,10 +115,7 @@ class MarioServer(threading.Thread):
     def __init__(self, port=36295, num_env=-1):
         super().__init__()
         #print("port: {} | num_env: {}".format(port, num_env))
-        if num_env is not (-1):
-            self.port = port + num_env
-        else:
-            self.port = port
+        self.port = port + num_env
         print("port: {} | num_env: {}".format(self.port, num_env))
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         name = 'localhost'

@@ -9,6 +9,10 @@ local IO = luanet.import_type "System.IO.Path"
 server.USE_CLIPBOARD = true
 server.SCREENSHOT_FILE = ""
 server.start_time = os.clock()
+server.end_time = 40
+server.old_progress = 0
+server.new_progress = 0
+server.old_velocity = 0
 
 function server.init(port, use_clipboard, file_name)
   server.mySocket = TcpClient("localhost", port)
@@ -56,7 +60,7 @@ end
 
 --[[ How many frames to wait before sending a new prediction request. If you're using a file, you
 may want to consider adding some frames here. ]]--
-local WAIT_FRAMES = 5
+local WAIT_FRAMES = 3
 
 savestate.loadslot(2)
 savestate.saveslot(2) -- save current slot for reset purposes
@@ -64,23 +68,51 @@ local util = require("util")
 
 
 --- reinforcement variables
-local new_progress = util.readProgress()
-local old_progress = 0
-local reward = 0
 local done = "False"
 local totalReward = 0
 
-function server.request_prediction()
-  new_progress = util.readProgress()
-  reward = new_progress - old_progress
-  if reward > 0 then
-    reward = 15^new_progress - 15^old_progress
-  else
-   -- reward = -.1
+function server.get_reward3()
+  local velocity = util.readVelocity()
+  velocity = velocity / 10
+
+  if server.old_progress > server.new_progress then
+    velocity = (velocity)*(-.1)
   end
+  return util.round(velocity, 3)
+end
+
+--- this function gives negativ reward if we slow down
+function server.get_reward2()
+  if server.old_progress > server.new_progress then
+    return -.1
+  end
+  local new_velocity = util.readVelocity()
+  if new_velocity > 5.2 then
+    return .3
+  end
+  if new_velocity > 5 then
+    return .2
+  end
+  if new_velocity > 3 then
+    return .1
+  end
+  if new_velocity > server.old_velocity then
+    return .0
+  elseif new_velocity == server.old_velocity then
+    return .0
+  else
+    return -.1
+  end
+  server.old_velocity = new_velocity
+  return new_velocity
+end
+
+function server.create_message()
+  local reward = server.get_reward3()
+  local current_time = util.readTimer()
   gui.addmessage("reward: " .. reward)
   totalReward = totalReward + reward
-  if os.clock() - server.start_time > 180 then -- we reset after 180 seconds
+  if current_time > 300 or totalReward < -3 or util.readProgress() >= 2.9 then -- we reset after 150 seconds
     done = "True"
     totalReward = 0
   else
@@ -97,13 +129,13 @@ function server.request_prediction()
     server.sMessage = "MESSAGE screenshot_" .. server.SCREENSHOT_FILE .. "_reward_" .. reward .. "_done_" .. done .. "\n"
     --outgoing_message = "PREDICT:" .. SCREENSHOT_FILE .. "\n"
   end
-  old_progress = new_progress
 end
 
 function server.start()
     while util.readProgress() < 3 do -- 3 means 3 laps
       -- Process the outgoing message.
-      server.request_prediction()
+      server.new_progress = util.readProgress()
+      server.create_message()
       server.sendMsg()
       --- Process incoming message
       server.rMessage = server.recvData()
@@ -136,7 +168,7 @@ function server.start()
 
         for i=1, WAIT_FRAMES do
           --console.log('wait frame')
-          joypad.set({["P1 A"] = acceleration})
+          joypad.set({["P1 A"] = true})
           joypad.setanalog({["P1 X Axis"] = util.convertSteerToJoystick(server.steering_action) })
           server.draw_info()
           emu.frameadvance()
@@ -145,12 +177,7 @@ function server.start()
         print("Prediction error...")
       end
 
-      if util.readProgress() > 2.97 then
-        console.log('finished a game lets reset. runtime: ' .. (os.clock() - server.run_time))
-        savestate.loadslot(2)
-        client.unpause()
-      end
-
+      server.old_progress = server.new_progress
     end
 
 end
