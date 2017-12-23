@@ -7,6 +7,7 @@ from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
 from baselines.acktr.policies import CnnPolicy
 
+from acktr_policies import OurAcktrPolicy
 from mario_env import MarioEnv
 
 
@@ -27,8 +28,8 @@ def train(num_timesteps, seed, num_cpu):
         return _thunk
     set_global_seeds(seed)
     env = SubprocVecEnv([make_env(i) for i in range(num_cpu)])
-    policy_fn = CnnPolicy
-    learn(policy_fn, env, seed, total_timesteps=int(num_timesteps * 1.1), nprocs=num_cpu)
+    policy_fn = OurAcktrPolicy
+    learn(policy_fn, env, seed, nsteps=4, total_timesteps=int(num_timesteps * 1.1), nprocs=num_cpu, save_interval=10)
     env.close()
 
 
@@ -40,7 +41,7 @@ def main():
     parser.add_argument('--num-timesteps', type=int, default=int(10e6))
     args = parser.parse_args()
     logger.configure()
-    train(num_timesteps=args.num_timesteps, seed=args.seed, num_cpu=4)
+    train(num_timesteps=args.num_timesteps, seed=args.seed, num_cpu=8)
 
 
 if __name__ == '__main__':
