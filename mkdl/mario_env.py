@@ -16,8 +16,8 @@ from utils import Singleton
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-INPUT_WIDTH = 200
-INPUT_HEIGHT = 66
+INPUT_WIDTH = 84
+INPUT_HEIGHT = 84
 
 USE_GREY_SCALE = False
 
@@ -31,14 +31,19 @@ class MarioEnv(gym.Env):
     """
     Mario Environment. Use this to communicate with the Mario kart client
     """
-    def __init__(self,  num_steering_dir=0, num_env=-1):
+
+    def __init__(self, num_steering_dir=0, num_env=-1, jump=False):
         """if you have multiple threads input marioserverholder"""
         # Set these in ALL subclasses
         self.mario_server = MarioServer(num_env=num_env)
         self.mario_server.start()
+        self.jump = jump
         # possible steering dir, A, jump j/n
         if num_steering_dir > 0:
-            self.action_space = spaces.Discrete(num_steering_dir)
+            if jump:
+                self.action_space = spaces.Discrete(num_steering_dir * 2)
+            else:
+                self.action_space = spaces.Discrete(num_steering_dir)
         else:
             self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,))
 
@@ -46,20 +51,25 @@ class MarioEnv(gym.Env):
         self.mario_connection = MarioConnection(self.mario_server, num_env=num_env)
         self.num_steering_dir = num_steering_dir
 
-
     # we send here an action to execute to the mario game
     # we expect a (new screenshot_path, reward, done) response
     def _step(self, action):
+        j_action = False
         if self.num_steering_dir > 0:  # we use action encoding
+            import  math
+            jump = True
+
             action_space = np.linspace(-1, 1, self.num_steering_dir)
-            action = action_space[action]
+            if jump:
+                j_action = not (action % 2 == 0)
+
+            action = action_space[math.floor(action/2)]
         else:
             action = np.clip(action, -0.99, 0.99)
             action = np.array([float('{:.2f}'.format(i)) for i in action])
             logger.debug('executing action: {}'.format(action))
 
-
-        (screen_shot, reward, done) = self.mario_connection.send_action(action)
+        (screen_shot, reward, done) = self.mario_connection.send_action(action, jump=j_action)
 
         im = self.get_screenshot(screen_shot)
         im = self.prepare_image(im)
@@ -89,15 +99,15 @@ class MarioEnv(gym.Env):
             im = im.convert('L')
         im = im.resize((conv_input_width, conv_input_height))
         im_arr = np.asarray(im)
-        #im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
+        # im_arr = np.frombuffer(im.tobytes(), dtype=np.uint8)
         im_arr = im_arr.reshape((conv_input_height, conv_input_width, conv_input_channels))
-        #im_arr = np.expand_dims(im_arr, axis=0)
+        # im_arr = np.expand_dims(im_arr, axis=0)
         return im_arr
 
     def get_screenshot(self, screenshot_path):
         im = None
         i = 0
-        while im is None and i < 5:
+        while im is None and i < 15:
             i = i + 1
             if screenshot_path == 'clip':
                 im = ImageGrab.grabclipboard()
@@ -114,7 +124,7 @@ class MarioEnv(gym.Env):
 class MarioServer(threading.Thread):
     def __init__(self, port=36295, num_env=-1):
         super().__init__()
-        #print("port: {} | num_env: {}".format(port, num_env))
+        # print("port: {} | num_env: {}".format(port, num_env))
         self.port = port + num_env
         print("port: {} | num_env: {}".format(self.port, num_env))
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -150,6 +160,7 @@ class MarioConnection:
     Responsible for the socket communication between the python server
     and the lua socket of the client
     """
+
     def __init__(self, server, num_env=-1):
         start_mario(num_env=num_env)  # start mario then get connection. server should be up and running already
         (self.client_socket, self.client_address) = server.get_connection_blocking()
@@ -158,9 +169,9 @@ class MarioConnection:
         self.client_socket.send(b'RESET\n')
         return self.expect_answer()
 
-    def send_action(self, action):
+    def send_action(self, action, jump=False):
         logger.info('sending action: {}'.format(action))
-        self.client_socket.send(bytes("{}\n".format(action), 'utf-8'))
+        self.client_socket.send(bytes("{}:{}\n".format(action, 1 if jump else 0), 'utf-8'))
         return self.expect_answer()
 
     def expect_answer(self):

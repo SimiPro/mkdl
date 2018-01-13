@@ -13,7 +13,8 @@ import os.path as osp
 import tensorflow as tf
 
 from mario_env import MarioEnv
-from policy import ContCnnPolicy, OurCNN
+from policy import ContCnnPolicy, OurCNN, OurCNN2
+
 
 def run(env_id, num_timesteps, seed, policy):
     ncpu = multiprocessing.cpu_count()
@@ -41,8 +42,8 @@ def run(env_id, num_timesteps, seed, policy):
     env = SubprocVecEnv([make_env(i) for i in range(nenvs)])
     set_global_seeds(seed)
     env = VecFrameStack(env, 4)
-    policy = {'cont': ContCnnPolicy, 'cnn' : OurCNN, 'lstm' : LstmPolicy, 'lnlstm' : LnLstmPolicy}[policy]
-    ppo2.run_only(policy=policy, env=env, nsteps=128, nminibatches=4,
+    policy = {'cont': ContCnnPolicy, 'cnn' : OurCNN2, 'lstm' : LstmPolicy, 'lnlstm' : LnLstmPolicy}[policy]
+    ppo2.run_only(policy=policy, env=env, nsteps=64, nminibatches=8,
         lam=0.95, gamma=0.99, noptepochs=4, log_interval=1,
         ent_coef=.01,
         lr=lambda f : f * 1e-3,
@@ -65,9 +66,9 @@ def train(env_id, num_timesteps, seed, policy):
         def env_fn():
             print(rank)
             if nenvs == 1:
-                env = MarioEnv(num_steering_dir=11)
+                env = MarioEnv(num_steering_dir=11, jump=True)
             else:
-                env = MarioEnv(num_steering_dir=11, num_env=rank)
+                env = MarioEnv(num_steering_dir=11, num_env=rank, jump=True)
             env.seed(seed + rank)
             env = bench.Monitor(env, logger.get_dir() and osp.join(logger.get_dir(), str(rank)))
             gym.logger.setLevel(logging.WARN)
@@ -77,7 +78,7 @@ def train(env_id, num_timesteps, seed, policy):
     env = SubprocVecEnv([make_env(i) for i in range(nenvs)])
     set_global_seeds(seed)
     env = VecFrameStack(env, 4)
-    policy = {'cont': ContCnnPolicy, 'cnn' : OurCNN, 'lstm' : LstmPolicy, 'lnlstm' : LnLstmPolicy}[policy]
+    policy = {'cont': ContCnnPolicy, 'cnn' : OurCNN2, 'lstm' : LstmPolicy, 'lnlstm' : LnLstmPolicy}[policy]
     ppo2.learn(policy=policy, env=env, nsteps=128, nminibatches=4,
         lam=0.95, gamma=0.99, noptepochs=4, log_interval=1,
         ent_coef=.01,

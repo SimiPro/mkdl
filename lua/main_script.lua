@@ -13,6 +13,9 @@ server.end_time = 40
 server.old_progress = 0
 server.new_progress = 0
 server.old_velocity = 0
+server.tmp_progress = 0
+server.old_time = 0
+server.new_time = 0
 
 function server.init(port, use_clipboard, file_name)
   server.mySocket = TcpClient("localhost", port)
@@ -60,7 +63,7 @@ end
 
 --[[ How many frames to wait before sending a new prediction request. If you're using a file, you
 may want to consider adding some frames here. ]]--
-local WAIT_FRAMES = 3
+local WAIT_FRAMES = 4
 
 savestate.loadslot(2)
 savestate.saveslot(2) -- save current slot for reset purposes
@@ -70,6 +73,13 @@ local util = require("util")
 --- reinforcement variables
 local done = "False"
 local totalReward = 0
+
+
+function server.get_reward4()
+  local velocity = util.readVelocity()
+
+  return velocity*server.new_progress
+end
 
 function server.get_reward3()
   local velocity = util.readVelocity()
@@ -111,11 +121,11 @@ function server.get_reward2()
 end
 
 function server.create_message()
-  local reward = server.get_reward3()
-  local current_time = util.readTimer()
+  local reward = server.get_reward2()
+  server.new_time = util.readTimer()
   gui.addmessage("reward: " .. reward)
   totalReward = totalReward + reward
-  if current_time > 300 or totalReward < -3 or util.readProgress() >= 2.9 then -- we reset after 150 seconds
+  if server.new_time > 30 or totalReward < -3 or util.readProgress() >= 3.1 then -- we reset after 150 seconds
     done = "True"
     totalReward = 0
   else
@@ -135,14 +145,13 @@ function server.create_message()
 end
 
 function server.start()
-    while util.readProgress() < 3 do -- 3 means 3 laps
+    while util.readProgress() < 3.5 do -- 3 means 3 laps
       -- Process the outgoing message.
       server.new_progress = util.readProgress()
       server.create_message()
       server.sendMsg()
       --- Process incoming message
       server.rMessage = server.recvData()
-
       if string.find(server.rMessage, "RESET") ~= nil then
         server.start_time = os.clock()
         console.log('Reset game - LOADING SLOT 2 Which we saved at the beginning')
@@ -150,29 +159,29 @@ function server.start()
         client.unpause()
       elseif string.find(server.rMessage, "PREDICTIONERROR") == nil then
         --console.log('current message: ' .. rMessage)
-        local a1, a2 = string.match(server.rMessage, "(-?%d.%d*)%s*(-?%d.%d*)")
+        local a1, a2 = string.match(server.rMessage, "(-?%d.%d*):(%d*)")
         --console.log('a1: ' .. a1 .. ' a2: ' .. a2)
-        local acceleration = true
+        local jump = true
         if a1 == nil then
           a1 = server.rMessage -- if we only have 1 action
         else
           -- we have 2 actions
-          if 0 < tonumber(a2) then
-            acceleration = true
+          if 1 == tonumber(a2) then
+            jump = true
+            gui.addmessage('jump')
           else
-            acceleration = false
+            jump = false
           end
         end
         server.steering_action = tonumber(a1)
-
 
         --console.log('current message: ' .. rMessage)
         --console.log('current steering_action: ' .. steering_action)
 
         for i=1, WAIT_FRAMES do
           --console.log('wait frame')
-          joypad.set({["P1 A"] = true})
           joypad.setanalog({["P1 X Axis"] = util.convertSteerToJoystick(server.steering_action) })
+          joypad.set({["P1 R"] = jump, ["P1 A"] = true})
           server.draw_info()
           emu.frameadvance()
         end
