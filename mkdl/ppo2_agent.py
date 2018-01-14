@@ -30,7 +30,7 @@ def run(env_id, num_timesteps, seed, policy):
         def env_fn():
             print(rank)
             if nenvs == 1:
-                env = MarioEnv(num_steering_dir=11)
+                env = MarioEnv(num_steering_dir=11, jump=True)
             else:
                 env = MarioEnv(num_steering_dir=11, num_env=rank)
             env.seed(seed + rank)
@@ -100,7 +100,7 @@ def main():
     parser.add_argument('--num-timesteps', type=int, default=int(10e6))
     args = parser.parse_args()
     logger.configure()
-    train(args.env, num_timesteps=args.num_timesteps, seed=args.seed, policy=args.policy)
+    run(args.env, num_timesteps=args.num_timesteps, seed=args.seed, policy=args.policy)
 
 if __name__ == '__main__':
     main()
