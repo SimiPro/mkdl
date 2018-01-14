@@ -8,6 +8,7 @@ setup(
         'p_mkdl',
         'gym',
         'nose'
+        'git+https://github.com/openai/baselines.git'
     ]
 
 )
