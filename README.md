@@ -31,29 +31,27 @@ Do this on the start of the track so the agent can directly start to cruse.
 #### mkdl 
 mkdl holds all the python code. 
 Short summary: 
-start_bizhawk.py : starts bizhawk automatically
-utils.py: some util functions
-run_bizhawk.py: starts bizhawk from python console
-policy.py: holds our used NeuralNetworks. Mostly used is OurCNN2 which is a CNN with 2 additional non-linear relu layers. 
-mario_env.py: holds the MarioEnv which the agent can act on. And also the MarioConnection which communicates with the Bizhawk
-ppo2_agent.py: executes the ppo agent. https://github.com/openai/baselines/tree/master/baselines/ppo2
-a2c_agent.py
-a3c_agent.py
-... just some additional agents we tried out and rejected again for our problem. 
+⋅⋅*start_bizhawk.py : starts bizhawk automatically
+⋅⋅*utils.py: some util functions
+⋅⋅*run_bizhawk.py: starts bizhawk from python console
+⋅⋅*policy.py: holds our used NeuralNetworks. Mostly used is OurCNN2 which is a CNN with 2 additional non-linear relu layers. 
+⋅⋅*mario_env.py: holds the MarioEnv which the agent can act on. And also the MarioConnection which communicates with the Bizhawk
+⋅⋅*ppo2_agent.py: executes the ppo agent. https://github.com/openai/baselines/tree/master/baselines/ppo2
+⋅⋅*a2c_agent.py
+⋅⋅*a3c_agent.py
+⋅⋅*... just some additional agents we tried out and rejected again for our problem. 
 
 ### Prerequisites
 
-- windows only (thanks to bizhawk)
-- install mupen64plus
-- python 3.6
-- a few additional libraries to get the gym environment up and running. sorry for that
+⋅⋅* windows only (thanks to bizhawk)
+⋅⋅* install mupen64plus
+⋅⋅* python 3.6
+⋅⋅* a few additional libraries to get the gym environment up and running. sorry for that
 
 ## Contributing
 
-- Huy Cao Tri Do
-- Samuel Andermatt
-- Quentin Auzepy
-- Simon Huber
+⋅⋅* Huy Cao Tri Do
+⋅⋅* Simon Huber
 
 
 ## License
