@@ -1,5 +1,6 @@
 import queue
 import threading
+import math
 
 import gym
 import socket
@@ -16,8 +17,8 @@ from utils import Singleton
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-INPUT_WIDTH = 84
-INPUT_HEIGHT = 84
+INPUT_WIDTH = 200
+INPUT_HEIGHT = 66
 
 USE_GREY_SCALE = False
 
@@ -56,14 +57,13 @@ class MarioEnv(gym.Env):
     def _step(self, action):
         j_action = False
         if self.num_steering_dir > 0:  # we use action encoding
-            import  math
-            jump = True
-
             action_space = np.linspace(-1, 1, self.num_steering_dir)
-            if jump:
+            if self.jump:
                 j_action = not (action % 2 == 0)
+                action = action_space[math.floor(action / 2)]
+            else:
+                action = action_space[action]
 
-            action = action_space[math.floor(action/2)]
         else:
             action = np.clip(action, -0.99, 0.99)
             action = np.array([float('{:.2f}'.format(i)) for i in action])

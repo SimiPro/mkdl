@@ -9,13 +9,15 @@ local IO = luanet.import_type "System.IO.Path"
 server.USE_CLIPBOARD = true
 server.SCREENSHOT_FILE = ""
 server.start_time = os.clock()
-server.end_time = 40
 server.old_progress = 0
 server.new_progress = 0
 server.old_velocity = 0
 server.tmp_progress = 0
 server.old_time = 0
 server.new_time = 0
+server.jump = false
+server.finish_message = false
+server.max_time = 100
 
 function server.init(port, use_clipboard, file_name)
   server.mySocket = TcpClient("localhost", port)
@@ -63,7 +65,7 @@ end
 
 --[[ How many frames to wait before sending a new prediction request. If you're using a file, you
 may want to consider adding some frames here. ]]--
-local WAIT_FRAMES = 4
+local WAIT_FRAMES = 3
 
 savestate.loadslot(2)
 savestate.saveslot(2) -- save current slot for reset purposes
@@ -99,8 +101,13 @@ function server.get_reward2()
   if server.old_progress > server.new_progress then
     return -.1
   end
+
   local new_velocity = util.readVelocity()
-  if new_velocity > 5.2 then
+  if new_velocity < 5.4 and server.jump then
+    return .0
+  end
+  gui.addmessage(new_velocity)
+  if new_velocity > 5.4 then
     return .3
   end
   if new_velocity > 5 then
@@ -125,9 +132,11 @@ function server.create_message()
   server.new_time = util.readTimer()
   gui.addmessage("reward: " .. reward)
   totalReward = totalReward + reward
-  if server.new_time > 30 or totalReward < -3 or util.readProgress() >= 3.1 then -- we reset after 150 seconds
+  if server.new_time > server.max_time or totalReward < -3 or util.readProgress() >= 3.1 then -- we reset after 150 seconds
     done = "True"
     totalReward = 0
+    console.log(server.new_time)
+    server.finish_message = false
   else
     done = "False"
   end
@@ -146,6 +155,10 @@ end
 
 function server.start()
     while util.readProgress() < 3.5 do -- 3 means 3 laps
+      if util.readProgress() > 3 and not server.finish_message then
+        console.log(util.readTimer())
+        server.finish_message = true
+      end
       -- Process the outgoing message.
       server.new_progress = util.readProgress()
       server.create_message()
@@ -161,16 +174,16 @@ function server.start()
         --console.log('current message: ' .. rMessage)
         local a1, a2 = string.match(server.rMessage, "(-?%d.%d*):(%d*)")
         --console.log('a1: ' .. a1 .. ' a2: ' .. a2)
-        local jump = true
+
         if a1 == nil then
           a1 = server.rMessage -- if we only have 1 action
         else
           -- we have 2 actions
           if 1 == tonumber(a2) then
-            jump = true
+            server.jump = true
             gui.addmessage('jump')
           else
-            jump = false
+            server.jump = false
           end
         end
         server.steering_action = tonumber(a1)
@@ -181,7 +194,7 @@ function server.start()
         for i=1, WAIT_FRAMES do
           --console.log('wait frame')
           joypad.setanalog({["P1 X Axis"] = util.convertSteerToJoystick(server.steering_action) })
-          joypad.set({["P1 R"] = jump, ["P1 A"] = true})
+          joypad.set({["P1 R"] = server.jump, ["P1 A"] = true})
           server.draw_info()
           emu.frameadvance()
         end

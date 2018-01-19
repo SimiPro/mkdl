@@ -51,7 +51,7 @@ class OurCNN2(object):
         nact = ac_space.n
         X = tf.placeholder(tf.uint8, ob_shape)  # obs
         with tf.variable_scope("model", reuse=reuse):
-            h = utils.conv(tf.cast(X, tf.float32) / 255., 'c1', nf=64, rf=8, stride=8, init_scale=np.sqrt(2))
+            h = utils.conv(tf.cast(X, tf.float32) / 255., 'c1', nf=32, rf=8, stride=4, init_scale=np.sqrt(2))
             h2 = utils.conv(h, 'c2', nf=32, rf=4, stride=2, init_scale=np.sqrt(2))
             h3 = utils.conv(h2, 'c3', nf=32, rf=3, stride=1, init_scale=np.sqrt(2))
             h3 = utils.conv_to_fc(h3)

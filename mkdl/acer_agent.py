@@ -33,7 +33,7 @@ def train(env_id, num_timesteps, seed, policy, lrschedule, num_cpu):
     else:
         print("Policy {} not implemented".format(policy))
         return
-    learn(policy_fn, env, seed, total_timesteps=int(num_timesteps * 1.1), lrschedule=lrschedule,buffer_size=15000, gamma=0.95)
+    learn(policy_fn, env, seed, nsteps=50, total_timesteps=int(num_timesteps * 1.1), lrschedule=lrschedule,buffer_size=15000, gamma=0.95)
     env.close()
 
 def main():
@@ -48,7 +48,7 @@ def main():
     args = parser.parse_args()
     logger.configure()
     train(args.env, num_timesteps=args.num_timesteps, seed=args.seed,
-          policy=args.policy, lrschedule=args.lrschedule, num_cpu=4)
+          policy=args.policy, lrschedule=args.lrschedule, num_cpu=8)
 
 if __name__ == '__main__':
     main()
