@@ -4,7 +4,7 @@
 
 The game environment of MarioKart 64 runs on the Bizhawk emulator which provides features for joypad support, recording functions of the gameplay as well as several debugging tools. Via Lua scripting it is possible to access and manipulate the game environment such that one can load and save the current state and subsequently take screenshots for learning abstract features of the environment.
 
-In order to establish real time learning AI, we used a python server on which the lua environments connects to. The agent which acts on the environment is then soly implemented in python.
+In order to establish real time learning AI, we used a python server on which the lua environments connect to. The agent which acts on the environment is then solely implemented in python.
 
 #### Youtube Videos
 
@@ -53,13 +53,13 @@ To get startet you can check out the simple [random action agent](https://github
 
 
 #### interaction with bizhawk
-Based on the gym environment from https://github.com/openai/gym. Each mario environment starts its own python server. Then we start via some environment variables who point to the bizhawk installation, the bizhawk client. For each environment which then reach out to the started python servers and connects on it. So we have an 1 to 1 sockets between mario environments on the python side and the mario clients on the bizhawk side. Via this socket we have a primitive text based communication with a few commands e.g. "RESET, 0.1234:1, ..".
+Based on the gym environment from https://github.com/openai/gym, each mario environment starts its own python server. Then, we start via some environment variables that point to the path the bizhawk client. For each environment we establish a connection with  the python servers. This results in a  1 to 1 socket between the mario environments on the python side and the Mario clients on the bizhawk side. Via this socket we have a primitive text based communication with a few commands e.g. "RESET, 0.1234:1, ..".
 
 The whole communication is basically encapsulated into the class MarioConnection and the agent only interacts with the MarioEnvironment. The MarioEnv implements the proposed Gym methods from openai:
 - Reset -> State: Resets the environment and gets the initial status back.
 - Act(action) -> State,Reward,Done: Executes an action and gets the reward back and if
  we're done or not.
-- Close -> closes the environment
+- Close -> closes the environment.
 There would be some more methods possibly to use but we don't need them.
 In our case the state is the current screenshot. The reward is some number in [0,1).
 
@@ -76,7 +76,7 @@ Since everything starts automatically.
 #### bizhawk side notes
 When bizhwak is loaded it loads the state saved on state 2. http://tasvideos.org/Bizhawk/SavestateFormat.html
 You can save a state via: shift + F2 on 2.
-Do this on the start of the track so the agent can directly start to cruse.
+Do this on the start of the track so the agent can directly start to cruise.
 
 #### mkdl
 mkdl holds all the python code.
@@ -100,48 +100,50 @@ Short summary:
 ## Installation
 
 1. Install python 3.6.4 (https://www.python.org/downloads/release/python-364/)
-2.  Install Pycharm https://www.jetbrains.com/pycharm/download/#section=windows
-3. Open Pycharm and select the python interpreter we just installed in 1
-4. Install package gym under File -> Project:mkdl -> Project Interpreter -> Green Plus symbol -> Add gym
-5. (Only if you did not install pycharm) Try install gym via **pip install gym --no-dependencies**)
-6. install tensorflow: **pip install tensorflow** (cpu version) / pip install tensorflow-gpu (gpu version)
-7. install openai baselines but our extended ones:  **pip install --no-dependencies git+https://github.com/SimiPro/baselines.git**
-8. install some more relevant module:
+2. install some relevant modules:
+  * **pip install gym --no-dependencies**
+  * **pip install tensorflow** (cpu version) / pip install tensorflow-gpu (gpu version)
   * **pip install bench**
   * **pip install logger**
   * **pip install cloudpickle**
-9. Install Microsoft MPI https://www.microsoft.com/en-us/download/details.aspx?id=55494
-10. Install Bizhawk https://github.com/TASVideos/BizHawk/releases
-11. Set the system environment variables:
+  *   install openai baselines but our extended ones:  **pip install --no-dependencies git+https://github.com/SimiPro/baselines.git**
+3. Install Microsoft MPI https://www.microsoft.com/en-us/download/details.aspx?id=55494
+4. Install Bizhawk https://github.com/TASVideos/BizHawk/releases
+5. Set the system environment variables:
   * BIZHAWK = "Path/To/BizHawkEmulator"
   * MKDL_LUA = "Path/To/MKDL_LUA/Folder"
-12. Create folder "isos" in the Bizhawk Emulator folder and place the rom file ('mario.z64') in the folder
+6. Create folder "isos" in the Bizhawk Emulator folder and place the rom file ('mario.z64') in the folder
+
+OPTIONAL:
+1.  Install Pycharm https://www.jetbrains.com/pycharm/download/#section=windows
+2. Open Pycharm and select the python interpreter we just installed in 1
+3. Install package gym under File -> Project:mkdl -> Project Interpreter -> Green Plus symbol -> Add gym
 
 ### Running
 
-Before running environment we have to create a save state which is loaded when bizhawk is started. This is normally at the start line of a track. 
+Before running environment we have to create a save state which is loaded when bizhawk is started. This is normally at the start line of a track.
 1. Run the Bizhawk  emulator and select the rom mario.z64
 2. Choose Timetrial mode, choose a Player, choose a Kart and Track (e.g. Luigi Raceaway)
 3. Press Shift + F1 to create a save state at slot 2, close the application
 4. Run python random_agent.py
 
 
-### Run the agent with pre trained weights 
+### Run the agent with pre trained weights
 
 How to use PPO2_agent.py
 
 To run the agent with precomputed weights:
 1. ppo2_agent.py, Line 103 change to run(..)
-2. Go to site-packages -> baselines -> PPO2 -> ppo2.py -> Line 153 
+2. Go to site-packages -> baselines -> PPO2 -> ppo2.py -> Line 153
 Make sure load_path = "Path\To\Model\\Model_no"
 
 The weights can be downloaded here and are thought to be used with the track of luigi raceaway: https://polybox.ethz.ch/index.php/s/FUgZ7cWQ7BVd2Kv
 
 
-### Train the agent 
+### Train the agent
 
 1. ppo2_agent.py, Line 103 change to train(..)
-2. Go to site-packages -> baselines -> PPO2 -> ppo2.py -> Line 153 
+2. Go to site-packages -> baselines -> PPO2 -> ppo2.py -> Line 153
 Make sure load_path = None
 
 
