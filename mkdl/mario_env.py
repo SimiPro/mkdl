@@ -17,8 +17,8 @@ from utils import Singleton
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-INPUT_WIDTH = 200
-INPUT_HEIGHT = 66
+INPUT_WIDTH = 84
+INPUT_HEIGHT = 84
 
 USE_GREY_SCALE = False
 
