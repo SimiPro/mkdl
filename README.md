@@ -15,8 +15,8 @@ Check out our youtube videos!
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=a89guwQpCB8" target="_blank"><img src="http://img.youtube.com/vi/a89guwQpCB8/0.jpg" alt="Example video" width="240" height="180" border="10" /></a>
 
 #### simple random agent
-To see how something works in a big picture an example is always pretty nice.
-So here is an agent that executes random actions provided by the action space.
+To see how things work in the big picture we provide the following example.
+Here is an example of an agent that executes random actions provided by the action space.
 
 ```python
 from mario_env import MarioEnv
@@ -49,19 +49,19 @@ if __name__ == '__main__':
     main()
 ```
 
-To get startet you can check out the simple [random action agent](https://github.com/SimiPro/mkdl/tree/master/mkdl/random_agent.py) which executes random actions.
+To get started, you can have a look at the simple [random action agent](https://github.com/SimiPro/mkdl/tree/master/mkdl/random_agent.py) which executes random actions.
 
 
 #### interaction with bizhawk
-Based on the gym environment from https://github.com/openai/gym, each mario environment starts its own python server. Then, we start via some environment variables that point to the path the bizhawk client. For each environment we establish a connection with  the python servers. This results in a  1 to 1 socket between the mario environments on the python side and the Mario clients on the bizhawk side. Via this socket we have a primitive text based communication with a few commands e.g. "RESET, 0.1234:1, ..".
+Based on the gym environment from https://github.com/openai/gym, each mario environment starts its own python server. Then, we start via some environment variables that point to the path of the bizhawk client. For each environment we establish a connection with the python servers. This results in a  1 to 1 socket between the mario environments on the python side and the Mario clients on the bizhawk side. Via this socket we have a primitive text based communication with a few commands e.g. "RESET, 0.1234:1, ..".
 
 The whole communication is basically encapsulated into the class MarioConnection and the agent only interacts with the MarioEnvironment. The MarioEnv implements the proposed Gym methods from openai:
 - Reset -> State: Resets the environment and gets the initial status back.
 - Act(action) -> State,Reward,Done: Executes an action and gets the reward back and if
  we're done or not.
 - Close -> closes the environment.
-There would be some more methods possibly to use but we don't need them.
-In our case the state is the current screenshot. The reward is some number in [0,1).
+The rest of the provided methods are not relevant for us .
+In our case the state is defined as the current screenshot. The reward is some value in the range [0,1].
 
 MarioConnection encapsulates the byte communication between bizhawk and python.
 
@@ -74,9 +74,9 @@ Since everything starts automatically.
 
 
 #### bizhawk side notes
-When bizhwak is loaded it loads the state saved on state 2. http://tasvideos.org/Bizhawk/SavestateFormat.html
-You can save a state via: shift + F2 on 2.
-Do this on the start of the track so the agent can directly start to cruise.
+When bizhawk is loaded it loads the state saved on state 2. http://tasvideos.org/Bizhawk/SavestateFormat.html
+You can save a state in-game via: shift + F2 on 2.
+It is advised to save the state at the beginning of the track such that the agent can directly start to cruise.
 
 #### mkdl
 mkdl holds all the python code.
