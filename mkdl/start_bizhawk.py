@@ -46,3 +46,4 @@ def start_mario(num_env=-1):
                              "--lua={}".format(lua_file_path),
                              "{}".format(mario_path)])
     print('running: {}'.format(proc.args))
+    return proc

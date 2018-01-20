@@ -91,6 +91,14 @@ class MarioEnv(gym.Env):
     def _seed(self, seed=None):
         return []
 
+    def _close(self):
+        print("Got close command")
+        self.mario_connection.close()
+        print("bizhawk closed closed")
+        self.mario_server.server_socket.close()
+        self.mario_server.join()
+        print("mario server closed")
+
     def prepare_image(self, im):
         return self.prepare_image_(im, INPUT_WIDTH, INPUT_HEIGHT, INPUT_CHANNELS)
 
@@ -136,11 +144,9 @@ class MarioServer(threading.Thread):
 
     def run(self):
         logger.info('starting tcp - socket on port: {}'.format(self.port))
-        self.server_socket.listen(1)  # wait for 5 connections
-        while self.connections < 1:
-            logger.info('Waiting for some more connection')
-            conn = self.server_socket.accept()
-            self.connection_queue.put(conn)
+        self.server_socket.listen(1)  # wait for 1 connections
+        conn = self.server_socket.accept()
+        self.connection_queue.put(conn)
 
     def get_connection_blocking(self):
         result = None
@@ -162,8 +168,9 @@ class MarioConnection:
     """
 
     def __init__(self, server, num_env=-1):
-        start_mario(num_env=num_env)  # start mario then get connection. server should be up and running already
+        self.process = start_mario(num_env=num_env)  # start mario then get connection. server should be up and running already
         (self.client_socket, self.client_address) = server.get_connection_blocking()
+        self.server = server
 
     def reset_client(self):
         self.client_socket.send(b'RESET\n')
@@ -198,6 +205,8 @@ class MarioConnection:
             logger.error("Got some screwed up message: {}".format(message))
             return None
 
+    def close(self):
+        self.process.kill()
 
 """
 this main program just runs 50 steps forward then it resets
