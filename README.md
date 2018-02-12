@@ -6,6 +6,9 @@ The game environment of MarioKart 64 runs on the Bizhawk emulator which provides
 
 In order to establish real time learning AI, we used a python server on which the lua environments connect to. The agent which acts on the environment is then solely implemented in python.
 
+#### Paper 
+https://polybox.ethz.ch/index.php/s/XH9sq6kOYkKxPZG
+
 #### Youtube Videos
 
 Check out our youtube videos!
